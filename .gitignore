@@ -4,7 +4,7 @@
 *.dll
 *.so
 *.dylib
-
+bin
 # Test binary, build with `go test -c`
 *.test
 
@@ -13,3 +13,4 @@
 
 # Ignore the built binary
 cert-manager-webhook-example
+apiserver.local.config
