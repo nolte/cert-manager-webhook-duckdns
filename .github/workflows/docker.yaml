@@ -33,7 +33,7 @@ jobs:
 
       - name: Determine tag
         run: |
-          echo "::set-env name=IMAGE_TAG::${GITHUB_REF#refs/tags/}"
+          echo "::set-env name=IMAGE_TAG::master"
 
       - name: Build and push container image
         run: |
