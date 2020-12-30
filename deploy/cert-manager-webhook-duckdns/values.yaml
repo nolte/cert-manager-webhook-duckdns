@@ -13,8 +13,8 @@ certManager:
   serviceAccountName: cert-manager
 
 image:
-  repository: nolte/cert-manager-webhook-duckdns
-  tag: dirty
+  repository: ebrianne/cert-manager-webhook-duckdns
+  tag: latest
   pullPolicy: Always #IfNotPresent
 
 nameOverride: ""

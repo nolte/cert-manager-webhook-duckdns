@@ -1,29 +1,23 @@
 package main
 
 import (
-	"context"
 	"encoding/json"
 	"strings"
+	"fmt"
+	"os"
+	"context"
 
+	cmmeta "github.com/jetstack/cert-manager/pkg/apis/meta/v1"
 	extapi "k8s.io/apiextensions-apiserver/pkg/apis/apiextensions/v1beta1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
-	"k8s.io/klog"
-
-	//"k8s.io/client-go/kubernetes"
-
-	"github.com/jetstack/cert-manager/pkg/acme/webhook/apis/acme/v1alpha1"
-	"github.com/jetstack/cert-manager/pkg/acme/webhook/cmd"
-	"github.com/nolte/cert-manager-webhook-duckdns/internal"
-
-	"errors"
-	"fmt"
-
-	"io/ioutil"
-	"net/http"
-	"os"
 
 	"k8s.io/client-go/kubernetes"
 	"k8s.io/client-go/rest"
+	"k8s.io/klog"
+
+	"github.com/jetstack/cert-manager/pkg/acme/webhook/apis/acme/v1alpha1"
+	"github.com/jetstack/cert-manager/pkg/acme/webhook/cmd"
+	"github.com/ebrianne/cert-manager-webhook-duckdns/internal"
 )
 
 var GroupName = os.Getenv("GROUP_NAME")
@@ -76,9 +70,7 @@ type duckDNSProviderConfig struct {
 	// to be decoded.
 	// These fields will be set by users in the
 	// `issuer.spec.acme.dns01.providers.webhook.config` field.
-	SecretRef string `json:"secretName"`
-	ZoneName  string `json:"zoneName"`
-	//APIKeySecretRef v1alpha1.SecretKeySelector `json:"apiKeySecretRef"`
+	APIKeySecretRef   cmmeta.SecretKeySelector `json:"apiKeySecretRef"`
 }
 
 // Name is used as the name for this DNS solver when referencing it on the ACME
@@ -98,15 +90,29 @@ func (c *duckDNSProviderSolver) Name() string {
 // solver has correctly configured the DNS provider.
 func (c *duckDNSProviderSolver) Present(ch *v1alpha1.ChallengeRequest) error {
 	klog.V(6).Infof("call function Present: namespace=%s, zone=%s, fqdn=%s", ch.ResourceNamespace, ch.ResolvedZone, ch.ResolvedFQDN)
-	config, err := clientConfig(c, ch)
+	
+	cfg, err := loadConfig(ch.Config)
 	if err != nil {
-		return fmt.Errorf("unable to get secret `%s`; %v", ch.ResourceNamespace, err)
+		return fmt.Errorf("unable to load config: %v", err)
 	}
-	klog.Infof("Update Duckdns Domain %s", config.ZoneName)
-	url := fmt.Sprintf("https://www.duckdns.org/update?domains=%s&token=%s&txt=%s", config.ZoneName, config.ApiKey, ch.Key)
-	callDuckDNS(url)
-	klog.Infof("Presented txt record %v", ch.ResolvedFQDN)
-	// TODO: add code that sets a record in the DNS provider's console
+
+	klog.V(6).Infof("decoded configuration %v", cfg)
+
+	apiKey, err := c.getApiKey(&cfg, ch.ResourceNamespace)
+	if err != nil {
+		return fmt.Errorf("unable to get API key: %v", err)
+	}
+
+	duckdnsClient := internal.NewDuckDNSClient(*apiKey)
+
+	domain := c.getDomain(ch)
+	klog.V(6).Infof("present for domain=%s", domain)
+
+	err = duckdnsClient.CreateTxtRecord(&domain, &ch.Key)
+	if err != nil {
+		return fmt.Errorf("unable to create TXT record: %v", err)
+	}
+
 	return nil
 }
 
@@ -117,14 +123,29 @@ func (c *duckDNSProviderSolver) Present(ch *v1alpha1.ChallengeRequest) error {
 // This is in order to facilitate multiple DNS validations for the same domain
 // concurrently.
 func (c *duckDNSProviderSolver) CleanUp(ch *v1alpha1.ChallengeRequest) error {
-	config, err := clientConfig(c, ch)
+	
+	klog.V(6).Infof("call function CleanUp: namespace=%s, zone=%s, fqdn=%s", ch.ResourceNamespace, ch.ResolvedZone, ch.ResolvedFQDN)
+
+	cfg, err := loadConfig(ch.Config)
 	if err != nil {
-		return fmt.Errorf("unable to get secret `%s`; %v", ch.ResourceNamespace, err)
+		return err
 	}
-	klog.Infof("Cleanup Duckdns Domain %s", config.ZoneName)
-	url := fmt.Sprintf("https://www.duckdns.org/update?domains=%s&token=%s&clear=true", config.ZoneName, config.ApiKey)
-	callDuckDNS(url)
-	klog.Infof("Cleanup record %v", ch.ResolvedFQDN)
+
+	apiKey, err := c.getApiKey(&cfg, ch.ResourceNamespace)
+	if err != nil {
+		return fmt.Errorf("unable to get API key: %v", err)
+	}
+
+	duckdnsClient := internal.NewDuckDNSClient(*apiKey)
+
+	domain := c.getDomain(ch)
+
+	klog.V(6).Infof("deleting TXT for domain=%s", domain)
+	err = duckdnsClient.DeleteTxtRecord(&domain, &ch.Key)
+	if err != nil {
+		return fmt.Errorf("unable to remove TXT record: %v", err)
+	}
+
 	return nil
 }
 
@@ -137,63 +158,29 @@ func (c *duckDNSProviderSolver) CleanUp(ch *v1alpha1.ChallengeRequest) error {
 // provider accounts.
 // The stopCh can be used to handle early termination of the webhook, in cases
 // where a SIGTERM or similar signal is sent to the webhook process.
-func (c *duckDNSProviderSolver) Initialize(kubeClientConfig *rest.Config, stopCh <-chan struct{}) error {
-	///// UNCOMMENT THE BELOW CODE TO MAKE A KUBERNETES CLIENTSET AVAILABLE TO
-	///// YOUR CUSTOM DNS PROVIDER
 
+func (c *duckDNSProviderSolver) Initialize(kubeClientConfig *rest.Config, _ <-chan struct{}) error {
+	klog.V(6).Infof("call function Initialize")
+	
 	cl, err := kubernetes.NewForConfig(kubeClientConfig)
 	if err != nil {
-		return err
+		return fmt.Errorf("unable to get k8s client: %v", err)
 	}
-
+	
 	c.client = cl
-
-	///// END OF CODE TO MAKE KUBERNETES CLIENTSET AVAILABLE
 	return nil
-}
-
-func clientConfig(c *duckDNSProviderSolver, ch *v1alpha1.ChallengeRequest) (internal.Config, error) {
-	var config internal.Config
-
-	cfg, err := loadConfig(ch.Config)
-	if err != nil {
-		return config, err
-	}
-	config.ZoneName = cfg.ZoneName
-
-	secretName := cfg.SecretRef
-	sec, err := c.client.CoreV1().Secrets(ch.ResourceNamespace).Get(context.TODO(), secretName, metav1.GetOptions{})
-
-	if err != nil {
-		return config, fmt.Errorf("unable to get secret `%s/%s`; %v", secretName, ch.ResourceNamespace, err)
-	}
-
-	apiKey, err := stringFromSecretData(&sec.Data, "api-key")
-	config.ApiKey = apiKey
-
-	if err != nil {
-		return config, fmt.Errorf("unable to get api-key from secret `%s/%s`; %v", secretName, ch.ResourceNamespace, err)
-	}
-
-	return config, nil
-}
-
-func stringFromSecretData(secretData *map[string][]byte, key string) (string, error) {
-	data, ok := (*secretData)[key]
-	if !ok {
-		return "", fmt.Errorf("key %q not found in secret data", key)
-	}
-	return string(data), nil
 }
 
 // loadConfig is a small helper function that decodes JSON configuration into
 // the typed config struct.
 func loadConfig(cfgJSON *extapi.JSON) (duckDNSProviderConfig, error) {
+	
 	cfg := duckDNSProviderConfig{}
 	// handle the 'base case' where no configuration has been provided
 	if cfgJSON == nil {
 		return cfg, nil
 	}
+	
 	if err := json.Unmarshal(cfgJSON.Raw, &cfg); err != nil {
 		return cfg, fmt.Errorf("error decoding solver config: %v", err)
 	}
@@ -201,46 +188,30 @@ func loadConfig(cfgJSON *extapi.JSON) (duckDNSProviderConfig, error) {
 	return cfg, nil
 }
 
-func callDuckDNS(url string) {
-
-	add, err := callDnsApi(url, "GET")
-
-	if err != nil {
-		klog.Error(err)
-	}
-
-	if !strings.HasPrefix(string(add), "OK") {
-		klog.Error(errors.New(string(add)))
-	}
-	klog.Infof("TXT record result: %s", string(add))
-
+func (c *duckDNSProviderSolver) getDomain(ch *v1alpha1.ChallengeRequest) string {
+	// Both ch.ResolvedZone and ch.ResolvedFQDN end with a dot: '.'
+	domain := strings.TrimSuffix(ch.ResolvedZone, ".")
+	
+	return domain
 }
 
-func callDnsApi(url string, method string) ([]byte, error) {
-	req, err := http.NewRequest(method, url, nil)
+// Get DuckDNS API key from Kubernetes secret.
+func (c *duckDNSProviderSolver) getApiKey(cfg *duckDNSProviderConfig, namespace string) (*string, error) {
+	
+	secretName := cfg.APIKeySecretRef.LocalObjectReference.Name
+	klog.V(6).Infof("try to load secret `%s` with key `%s`", secretName, cfg.APIKeySecretRef.Key)
+
+	sec, err := c.client.CoreV1().Secrets(namespace).Get(context.TODO(), secretName, metav1.GetOptions{})
 	if err != nil {
-		return []byte{}, fmt.Errorf("unable to execute request %v", err)
+		return nil, fmt.Errorf("unable to get secret `%s`; %v", secretName, err)
 	}
 
-	client := &http.Client{}
-	resp, err := client.Do(req)
-	if err != nil {
-		return nil, err
+	secBytes, ok := sec.Data[cfg.APIKeySecretRef.Key]
+	if !ok {
+		return nil, fmt.Errorf("key %q not found in secret \"%s/%s\"", cfg.APIKeySecretRef.Key,
+			cfg.APIKeySecretRef.LocalObjectReference.Name, namespace)
 	}
 
-	defer func() {
-		err := resp.Body.Close()
-		if err != nil {
-			klog.Fatal(err)
-		}
-	}()
-
-	respBody, _ := ioutil.ReadAll(resp.Body)
-	if resp.StatusCode == http.StatusOK {
-		return respBody, nil
-	}
-
-	text := "Error calling API status:" + resp.Status + " url: " + url + " method: " + method
-	klog.Error(text)
-	return nil, errors.New(text)
+	apiKey := string(secBytes)
+	return &apiKey, nil
 }
