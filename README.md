@@ -1,4 +1,9 @@
 # ACME webhook for DuckDNS (cert-manager-webhook-duckdns)
+
+![Build/Push (master)](https://github.com/ebrianne/cert-manager-webhook-duckdns/workflows/Build/Push%20(master)/badge.svg?branch=master)
+[![GoDoc](https://godoc.org/github.com/ebrianne/cert-manager-webhook-duckdns?status.png)](https://godoc.org/github.com/ebrianne/cert-manager-webhook-duckdns)
+[![GoReportCard](https://goreportcard.com/badge/github.com/ebrianne/cert-manager-webhook-duckdns)](https://goreportcard.com/report/github.com/ebrianne/cert-manager-webhook-duckdns)
+
 `cert-manager-webhook-duckdns` is an ACME webhook for [cert-manager]. It provides an ACME (read: Let's Encrypt) webhook for [cert-manager], which allows to use a `DNS-01` challenge with [DuckDNS]. This allows to provide Let's Encrypt certificates to [Kubernetes] for service protocols other than HTTP and furthermore to request wildcard certificates. Internally it uses the [DuckDNS API] to communicate with DuckDNS.
 
 Quoting the [ACME DNS-01 challenge]:
