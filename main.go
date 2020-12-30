@@ -1,11 +1,11 @@
 package main
 
 import (
+	"context"
 	"encoding/json"
-	"strings"
 	"fmt"
 	"os"
-	"context"
+	"strings"
 
 	cmmeta "github.com/jetstack/cert-manager/pkg/apis/meta/v1"
 	extapi "k8s.io/apiextensions-apiserver/pkg/apis/apiextensions/v1beta1"
@@ -15,9 +15,9 @@ import (
 	"k8s.io/client-go/rest"
 	"k8s.io/klog"
 
+	"github.com/ebrianne/cert-manager-webhook-duckdns/internal"
 	"github.com/jetstack/cert-manager/pkg/acme/webhook/apis/acme/v1alpha1"
 	"github.com/jetstack/cert-manager/pkg/acme/webhook/cmd"
-	"github.com/ebrianne/cert-manager-webhook-duckdns/internal"
 )
 
 var GroupName = os.Getenv("GROUP_NAME")
@@ -70,7 +70,7 @@ type duckDNSProviderConfig struct {
 	// to be decoded.
 	// These fields will be set by users in the
 	// `issuer.spec.acme.dns01.providers.webhook.config` field.
-	APIKeySecretRef   cmmeta.SecretKeySelector `json:"apiKeySecretRef"`
+	APIKeySecretRef cmmeta.SecretKeySelector `json:"apiKeySecretRef"`
 }
 
 // Name is used as the name for this DNS solver when referencing it on the ACME
@@ -90,7 +90,7 @@ func (c *duckDNSProviderSolver) Name() string {
 // solver has correctly configured the DNS provider.
 func (c *duckDNSProviderSolver) Present(ch *v1alpha1.ChallengeRequest) error {
 	klog.V(6).Infof("call function Present: namespace=%s, zone=%s, fqdn=%s", ch.ResourceNamespace, ch.ResolvedZone, ch.ResolvedFQDN)
-	
+
 	cfg, err := loadConfig(ch.Config)
 	if err != nil {
 		return fmt.Errorf("unable to load config: %v", err)
@@ -123,7 +123,7 @@ func (c *duckDNSProviderSolver) Present(ch *v1alpha1.ChallengeRequest) error {
 // This is in order to facilitate multiple DNS validations for the same domain
 // concurrently.
 func (c *duckDNSProviderSolver) CleanUp(ch *v1alpha1.ChallengeRequest) error {
-	
+
 	klog.V(6).Infof("call function CleanUp: namespace=%s, zone=%s, fqdn=%s", ch.ResourceNamespace, ch.ResolvedZone, ch.ResolvedFQDN)
 
 	cfg, err := loadConfig(ch.Config)
@@ -161,12 +161,12 @@ func (c *duckDNSProviderSolver) CleanUp(ch *v1alpha1.ChallengeRequest) error {
 
 func (c *duckDNSProviderSolver) Initialize(kubeClientConfig *rest.Config, _ <-chan struct{}) error {
 	klog.V(6).Infof("call function Initialize")
-	
+
 	cl, err := kubernetes.NewForConfig(kubeClientConfig)
 	if err != nil {
 		return fmt.Errorf("unable to get k8s client: %v", err)
 	}
-	
+
 	c.client = cl
 	return nil
 }
@@ -174,13 +174,13 @@ func (c *duckDNSProviderSolver) Initialize(kubeClientConfig *rest.Config, _ <-ch
 // loadConfig is a small helper function that decodes JSON configuration into
 // the typed config struct.
 func loadConfig(cfgJSON *extapi.JSON) (duckDNSProviderConfig, error) {
-	
+
 	cfg := duckDNSProviderConfig{}
 	// handle the 'base case' where no configuration has been provided
 	if cfgJSON == nil {
 		return cfg, nil
 	}
-	
+
 	if err := json.Unmarshal(cfgJSON.Raw, &cfg); err != nil {
 		return cfg, fmt.Errorf("error decoding solver config: %v", err)
 	}
@@ -191,13 +191,13 @@ func loadConfig(cfgJSON *extapi.JSON) (duckDNSProviderConfig, error) {
 func (c *duckDNSProviderSolver) getDomain(ch *v1alpha1.ChallengeRequest) string {
 	// Both ch.ResolvedZone and ch.ResolvedFQDN end with a dot: '.'
 	domain := strings.TrimSuffix(ch.ResolvedZone, ".")
-	
+
 	return domain
 }
 
 // Get DuckDNS API key from Kubernetes secret.
 func (c *duckDNSProviderSolver) getApiKey(cfg *duckDNSProviderConfig, namespace string) (*string, error) {
-	
+
 	secretName := cfg.APIKeySecretRef.LocalObjectReference.Name
 	klog.V(6).Infof("try to load secret `%s` with key `%s`", secretName, cfg.APIKeySecretRef.Key)
 

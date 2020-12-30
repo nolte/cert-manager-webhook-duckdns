@@ -12,7 +12,7 @@ const (
 )
 
 type DuckDNSClient struct {
-	apiKey              string
+	apiKey string
 }
 
 func NewDuckDNSClient(apiKey string) *DuckDNSClient {
@@ -26,7 +26,7 @@ func (c *DuckDNSClient) RecordsUrl(domain string) string {
 }
 
 func (c *DuckDNSClient) doRequest(req *http.Request, readResponseBody bool) (int, []byte, error) {
-	
+
 	client := http.Client{
 		Timeout: 30 * time.Second,
 	}
@@ -48,7 +48,7 @@ func (c *DuckDNSClient) doRequest(req *http.Request, readResponseBody bool) (int
 }
 
 func (c *DuckDNSClient) CreateTxtRecord(domain *string, value *string) error {
-	
+
 	// curl https://www.duckdns.org/update?domains=<DOMAIN>&token=<TOKEN>&txt=<TXT>
 
 	url := fmt.Sprintf("%s&txt=%s", c.RecordsUrl(*domain), *value)
@@ -70,7 +70,7 @@ func (c *DuckDNSClient) CreateTxtRecord(domain *string, value *string) error {
 }
 
 func (c *DuckDNSClient) DeleteTxtRecord(domain *string, value *string) error {
-	
+
 	// curl https://www.duckdns.org/update?domains=<DOMAIN>&token=<TOKEN>&txt=<TXT>&clear=true
 
 	url := fmt.Sprintf("%s&txt=%s&clear=true", c.RecordsUrl(*domain), *value)
