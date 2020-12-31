@@ -14,6 +14,16 @@ certManager:
   namespace: cert-manager
   serviceAccountName: cert-manager
 
+duckdns:
+  token: ""
+
+clusterIssuer:
+  email: name@example.com
+  staging:
+    create: false
+  production:
+    create: false
+    
 image:
   repository: ebrianne/cert-manager-webhook-duckdns
   tag: latest
