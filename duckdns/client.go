@@ -9,6 +9,7 @@ import (
 	"strings"
 
 	"github.com/jetstack/cert-manager/pkg/issuer/acme/dns/util"
+	"k8s.io/klog"
 )
 
 const (
@@ -31,18 +32,30 @@ func (c *Client) RecordsUrl(entry string) string {
 	return fmt.Sprintf("%sdomains=%s&token=%s", DuckDnsBaseUrl, entry, c.apiToken)
 }
 
-func (c *Client) getDomainAndEntry(zone string, fqdn string) (string, string) {
+func (c *Client) getDomainZone(zone string, fqdn string) (string, string) {
 	// Both ch.ResolvedZone and ch.ResolvedFQDN end with a dot: '.'
 	entry := util.UnFqdn(strings.TrimSuffix(fqdn, zone))
 	entry = util.UnFqdn(entry)
-	domain := util.UnFqdn(zone)
-	return entry, domain
+
+	domain := util.UnFqdn(zone) //<suffix>.<domain>.duckdns.org //wildcard is not supported here
+
+	duckdnszone := strings.TrimSuffix(domain, "duckdns.org") //<suffix>.<domain>. or <domain>.
+	duckdnszone = util.UnFqdn(duckdnszone) //<suffix>.<domain> or <domain>
+	split := strings.Split(duckdnszone, ".")
+
+	if len(split) == 2 {
+		return domain, split[1] 
+	}
+
+	return domain, duckdnszone
 }
 
 func (c *Client) addTxtRecord(entry, key string) error {
 	// curl https://www.duckdns.org/update?domains=<DOMAIN>&token=<TOKEN>&txt=<TXT>
 
 	url := fmt.Sprintf("%s&txt=%s", c.RecordsUrl(entry), key)
+	klog.Infof("addTxtRecord: Sending request to url: %v ", url)
+	
 	req, err := http.NewRequest("GET", url, nil)
 	if err != nil {
 		return err
@@ -89,6 +102,8 @@ func (c *Client) deleteTxtRecord(entry, key string) error {
 	// curl https://www.duckdns.org/update?domains=<DOMAIN>&token=<TOKEN>&clear=true
 
 	url := fmt.Sprintf("%s&txt=%s&clear=true", c.RecordsUrl(entry), key)
+	klog.Infof("deleteTxtRecord: Sending request to url: %v ", url)
+	
 	req, err := http.NewRequest("GET", url, nil)
 	if err != nil {
 		return err

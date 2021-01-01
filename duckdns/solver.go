@@ -105,10 +105,10 @@ func (s *duckDNSProviderSolver) Present(ch *v1alpha1.ChallengeRequest) error {
 		return err
 	}
 
-	entry, domain := client.getDomainAndEntry(ch.ResolvedZone, ch.ResolvedFQDN)
-	klog.Infof("Got entry/domain: %v %v", entry, domain)
+	domain, duckdnszone := client.getDomainZone(ch.ResolvedZone, ch.ResolvedFQDN)
+	klog.Infof("Got domain %v and duckdns zone %v", domain, duckdnszone)
 
-	if err := client.addTxtRecord(domain, ch.Key); err != nil {
+	if err := client.addTxtRecord(duckdnszone, ch.Key); err != nil {
 		klog.Errorf("Add txt record %q error: %v", ch.ResolvedFQDN, err)
 		return err
 	}
@@ -131,12 +131,12 @@ func (s *duckDNSProviderSolver) CleanUp(ch *v1alpha1.ChallengeRequest) error {
 		return err
 	}
 
-	entry, domain := client.getDomainAndEntry(ch.ResolvedZone, ch.ResolvedFQDN)
-	klog.Infof("Got entry/domain: %v %v", entry, domain)
+	domain, duckdnszone := client.getDomainZone(ch.ResolvedZone, ch.ResolvedFQDN)
+	klog.Infof("Got domain %v and duckdns zone %v", domain, duckdnszone)
 
 	record, err := client.getTxtRecord(domain); 
 	if err != nil {
-		klog.Errorf("Get text record %v.%v error: %v", entry, domain, err)
+		klog.Errorf("Get text record %v error: %v", ch.ResolvedFQDN, err)
 		return err
 	}
 	klog.Infof("Got txt record: %v", record)
@@ -146,7 +146,7 @@ func (s *duckDNSProviderSolver) CleanUp(ch *v1alpha1.ChallengeRequest) error {
 		return errors.New("record value does not match")
 	}
 
-	if err := client.deleteTxtRecord(domain, ch.Key); err != nil {
+	if err := client.deleteTxtRecord(duckdnszone, ch.Key); err != nil {
 		klog.Errorf("Delete domain record %v error: %v", ch.ResolvedFQDN, err)
 		return err
 	}
