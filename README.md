@@ -59,6 +59,7 @@ This webhook has been tested with [cert-manager] v1.0.1 and Kubernetes v0.17.x o
 
         helm install cert-manager-webhook-duckdns \
             --namespace cert-manager \
+            --set duckdns.domain='<domain>' \
             --set duckdns.token='<token>' \
             --set clusterIssuer.production.enabled=true \
             --set clusterIssuer.staging.enabled=true \

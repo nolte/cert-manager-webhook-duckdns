@@ -15,6 +15,7 @@ certManager:
   serviceAccountName: cert-manager
 
 duckdns:
+  domain: ""
   token: ""
 
 clusterIssuer:

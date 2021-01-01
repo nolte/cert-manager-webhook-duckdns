@@ -39,6 +39,10 @@ func (s *duckDNSProviderSolver) Name() string {
 
 func (s *duckDNSProviderSolver) validateConfig(cfg *Config) error {
 
+	if cfg.Domain == "" {
+		return errors.New("no duckdns domain provided in DuckDNS config")
+	}
+
 	if cfg.APITokenSecretRef.LocalObjectReference.Name == "" {
 		return errors.New("no api token secret provided in DuckDNS config")
 	}
@@ -65,7 +69,7 @@ func (s *duckDNSProviderSolver) newClientFromChallenge(ch *v1alpha1.ChallengeReq
 		return nil, fmt.Errorf("get credential error: %v", err)
 	}
 
-	client, err := newClient(*apiToken)
+	client, err := newClient(cfg.Domain, *apiToken)
 	if err != nil {
 		return nil, fmt.Errorf("new dns client error: %v", err)
 	}
@@ -105,10 +109,10 @@ func (s *duckDNSProviderSolver) Present(ch *v1alpha1.ChallengeRequest) error {
 		return err
 	}
 
-	domain, duckdnszone := client.getDomainZone(ch.ResolvedZone, ch.ResolvedFQDN)
-	klog.Infof("Got domain %v and duckdns zone %v", domain, duckdnszone)
+	domain := client.domain
+	klog.Infof("Present txt record for domain %v", domain)
 
-	if err := client.addTxtRecord(duckdnszone, ch.Key); err != nil {
+	if err := client.addTxtRecord(domain, ch.Key); err != nil {
 		klog.Errorf("Add txt record %q error: %v", ch.ResolvedFQDN, err)
 		return err
 	}
@@ -131,8 +135,8 @@ func (s *duckDNSProviderSolver) CleanUp(ch *v1alpha1.ChallengeRequest) error {
 		return err
 	}
 
-	domain, duckdnszone := client.getDomainZone(ch.ResolvedZone, ch.ResolvedFQDN)
-	klog.Infof("Got domain %v and duckdns zone %v", domain, duckdnszone)
+	domain := client.domain
+	klog.Infof("Cleaning up txt record for domain %v", domain)
 
 	record, err := client.getTxtRecord(domain); 
 	if err != nil {
@@ -146,7 +150,7 @@ func (s *duckDNSProviderSolver) CleanUp(ch *v1alpha1.ChallengeRequest) error {
 		return errors.New("record value does not match")
 	}
 
-	if err := client.deleteTxtRecord(duckdnszone, ch.Key); err != nil {
+	if err := client.deleteTxtRecord(domain, ch.Key); err != nil {
 		klog.Errorf("Delete domain record %v error: %v", ch.ResolvedFQDN, err)
 		return err
 	}

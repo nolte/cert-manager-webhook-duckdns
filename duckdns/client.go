@@ -8,7 +8,6 @@ import (
 	"net"
 	"strings"
 
-	"github.com/jetstack/cert-manager/pkg/issuer/acme/dns/util"
 	"k8s.io/klog"
 )
 
@@ -18,12 +17,14 @@ const (
 
 type Client struct {
 	httpClient http.Client
+	domain     string
 	apiToken   string
 }
 
-func newClient(apiToken string) (*Client, error) {
+func newClient(domain, apiToken string) (*Client, error) {
 	return &Client{ 
-		httpClient: http.Client{ Timeout: 30 * time.Second, }, 
+		httpClient: http.Client{ Timeout: 30 * time.Second, },
+		domain: domain,
 		apiToken: apiToken,
 		}, nil
 }
@@ -32,28 +33,10 @@ func (c *Client) RecordsUrl(entry string) string {
 	return fmt.Sprintf("%sdomains=%s&token=%s", DuckDnsBaseUrl, entry, c.apiToken)
 }
 
-func (c *Client) getDomainZone(zone string, fqdn string) (string, string) {
-	// Both ch.ResolvedZone and ch.ResolvedFQDN end with a dot: '.'
-	entry := util.UnFqdn(strings.TrimSuffix(fqdn, zone))
-	entry = util.UnFqdn(entry)
-
-	domain := util.UnFqdn(zone) //<suffix>.<domain>.duckdns.org //wildcard is not supported here
-
-	duckdnszone := strings.TrimSuffix(domain, "duckdns.org") //<suffix>.<domain>. or <domain>.
-	duckdnszone = util.UnFqdn(duckdnszone) //<suffix>.<domain> or <domain>
-	split := strings.Split(duckdnszone, ".")
-
-	if len(split) == 2 {
-		return domain, split[1] 
-	}
-
-	return domain, duckdnszone
-}
-
-func (c *Client) addTxtRecord(entry, key string) error {
+func (c *Client) addTxtRecord(domain, key string) error {
 	// curl https://www.duckdns.org/update?domains=<DOMAIN>&token=<TOKEN>&txt=<TXT>
 
-	url := fmt.Sprintf("%s&txt=%s", c.RecordsUrl(entry), key)
+	url := fmt.Sprintf("%s&txt=%s", c.RecordsUrl(domain), key)
 	klog.Infof("addTxtRecord: Sending request to url: %v ", url)
 	
 	req, err := http.NewRequest("GET", url, nil)
@@ -83,9 +66,9 @@ func (c *Client) addTxtRecord(entry, key string) error {
 	return nil
 }
 
-func (c *Client) getTxtRecord(entry string) (string, error) {
+func (c *Client) getTxtRecord(domain string) (string, error) {
 
-	txt, err := net.LookupTXT(entry)
+	txt, err := net.LookupTXT(domain)
 	if err != nil {
 		return "", fmt.Errorf("Unable to get txt record", err)
 	}
@@ -98,10 +81,10 @@ func (c *Client) getTxtRecord(entry string) (string, error) {
 	return txt[0], nil
 }
 
-func (c *Client) deleteTxtRecord(entry, key string) error {
+func (c *Client) deleteTxtRecord(domain, key string) error {
 	// curl https://www.duckdns.org/update?domains=<DOMAIN>&token=<TOKEN>&clear=true
 
-	url := fmt.Sprintf("%s&txt=%s&clear=true", c.RecordsUrl(entry), key)
+	url := fmt.Sprintf("%s&txt=%s&clear=true", c.RecordsUrl(domain), key)
 	klog.Infof("deleteTxtRecord: Sending request to url: %v ", url)
 	
 	req, err := http.NewRequest("GET", url, nil)
