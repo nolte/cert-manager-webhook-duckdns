@@ -4,4 +4,4 @@ metadata:
   name: duckdns-token
 type: Opaque
 data:
-  key: <BASE64 API KEY>
+  duckdns-token: <BASE64 API KEY>

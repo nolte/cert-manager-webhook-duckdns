@@ -5,6 +5,7 @@ import (
 	"testing"
 
 	"github.com/jetstack/cert-manager/test/acme/dns"
+	"github.com/ebrianne/cert-manager-webhook-duckdns/duckdns"
 )
 
 var (
@@ -16,8 +17,7 @@ func TestRunsSuite(t *testing.T) {
 	// snippet of valid configuration that should be included on the
 	// ChallengeRequest passed as part of the test cases.
 
-	solver := &duckDNSProviderSolver{}
-	fixture := dns.NewFixture(solver,
+	fixture := dns.NewFixture(duckdns.NewSolver(),
 		dns.SetBinariesPath("__main__/hack/bin"),
 		dns.SetResolvedZone(zone),
 		dns.SetAllowAmbientCredentials(false),

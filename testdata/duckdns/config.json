@@ -1,6 +1,6 @@
 {
-    "apiKeySecretRef": {
-        "name": "duckdns-token",
-        "key": "key"
+    "apiTokenSecretRef": {
+        "Name": "duckdns-token",
+        "Key": "duckdns-token"
     }
 }

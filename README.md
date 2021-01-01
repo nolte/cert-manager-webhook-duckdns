@@ -55,19 +55,14 @@ This webhook has been tested with [cert-manager] v1.0.1 and Kubernetes v0.17.x o
             kubectl describe pods -n cert-manager | less
 
 
-3. Create the secret to keep the DuckDNS API key in the default namespace, where later on the Issuer and the Certificate are created:
-
-        kubectl create secret generic duckdns-credentials \
-            --from-literal=duckdns-token='<DUCKDNS-API-KEY>'
-
-    *The `Secret` must reside in the same namespace as the `Issuer` and `Certificate` resource.*
-
-4. Deploy this locally built webhook (add `--dry-run` to try it and `--debug` to inspect the rendered manifests; Set `logLevel` to 6 for verbose logs):
+3. Deploy this locally built webhook (add `--dry-run` to try it and `--debug` to inspect the rendered manifests; Set `logLevel` to 6 for verbose logs):
 
         helm install cert-manager-webhook-duckdns \
             --namespace cert-manager \
-            --set image.repository=ebrianne/cert-manager-webhook-duckdns \
-            --set image.tag=latest \
+            --set duckdns.token='<token>' \
+            --set clusterIssuer.production.enabled=true \
+            --set clusterIssuer.staging.enabled=true \
+            --set clusterIssuer.email=<email> \
             --set logLevel=2 \
             ./deploy/cert-manager-webhook-duckdns
 
@@ -76,52 +71,20 @@ This webhook has been tested with [cert-manager] v1.0.1 and Kubernetes v0.17.x o
             kubectl get pods -n cert-manager --watch
             kubectl logs -n cert-manager cert-manager-webhook-duckdns-XYZ
 
-5. Create a staging issuer (email addresses with the suffix `example.com` are forbidden):
-
-        cat << EOF | sed "s/invalid@example.com/$email/" | kubectl apply -f -
-        apiVersion: cert-manager.io/v1alpha2
-        kind: Issuer
-        metadata:
-          name: letsencrypt-staging
-          namespace: default
-        spec:
-          acme:
-            # The ACME server URL
-            server: https://acme-staging-v02.api.letsencrypt.org/directory
-            # Email address used for ACME registration
-            email: invalid@example.com
-            # Name of a secret used to store the ACME account private key
-            privateKeySecretRef:
-              name: letsencrypt-staging
-            solvers:
-            - dns01:
-                webhook:
-                  groupName: acme.duckdns.org
-                  solverName: duckdns
-                  config:
-                    apiKeySecretRef:
-                      key: duckdns-token
-                      name: duckdns-credentials
-        EOF
-
-    Check status of the Issuer:
-
-        kubectl describe issuer letsencrypt-staging
-
-    *Note*: The production Issuer is [similar][ACME documentation].
-
-6. Issue a [Certificate] for your `$DOMAIN`:
+5. Issue a [Certificate] for your `$DOMAIN`:
 
         cat << EOF | sed "s/example-com/$DOMAIN/" | kubectl apply -f -
-        apiVersion: cert-manager.io/v1alpha2
+        apiVersion: cert-manager.io/v1
         kind: Certificate
         metadata:
           name: example-com
+          namespace: services
         spec:
           dnsNames:
-          - example-com
+          - 'example-com'
           issuerRef:
-            name: letsencrypt-staging
+            name: cert-manager-webhook-duckdns-production
+            kind: ClusterIssuer
           secretName: example-com-tls
         EOF
 
@@ -133,35 +96,12 @@ This webhook has been tested with [cert-manager] v1.0.1 and Kubernetes v0.17.x o
 
         kubectl get secret $DOMAIN-tls -o yaml
 
-7. Issue a wildcard Certificate for your `$DOMAIN`:
-
-        cat << EOF | sed "s/example-com/$DOMAIN/" | kubectl apply -f -
-        apiVersion: cert-manager.io/v1alpha2
-        kind: Certificate
-        metadata:
-          name: wildcard-example-com
-        spec:
-          dnsNames:
-          - '*.example-com'
-          issuerRef:
-            name: letsencrypt-staging
-          secretName: wildcard-example-com-tls
-        EOF
-
-    Check the status of the Certificate:
-
-        kubectl describe certificate $DOMAIN
-
-    Display the details like the common name and subject alternative names:
-
-        kubectl get secret wildcard-$DOMAIN-tls -o yaml
-
-9. Uninstall this webhook:
+7. Uninstall this webhook:
 
         helm uninstall cert-manager-webhook-duckdns --namespace cert-manager
         kubectl delete duckdns-credentials
 
-10. Uninstalling cert-manager:
+8. Uninstalling cert-manager:
 
 Refer to the official [documentation][cert-manager-uninstall].
 
@@ -181,7 +121,6 @@ TEST_ZONE_NAME=example.com. go test -v .
 ```
 
 [ACME DNS-01 challenge]: https://letsencrypt.org/docs/challenge-types/#dns-01-challenge
-[ACME documentation]: https://cert-manager.io/docs/configuration/acme/
 [Certificate]: https://cert-manager.io/docs/usage/certificate/
 [cert-manager]: https://cert-manager.io/
 [DuckDNS]: https://www.duckdns.org
