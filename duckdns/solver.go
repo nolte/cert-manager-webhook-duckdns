@@ -146,7 +146,7 @@ func (s *duckDNSProviderSolver) CleanUp(ch *v1alpha1.ChallengeRequest) error {
 	klog.Infof("Got txt record: %v", record)
 
 	if record != ch.Key {
-		klog.Errorf("Records value does not match: %v", ch.ResolvedFQDN)
+		klog.Errorf("Record value %v does not match key %v for %v", record, ch.Key, ch.ResolvedFQDN)
 		return errors.New("record value does not match")
 	}
 
