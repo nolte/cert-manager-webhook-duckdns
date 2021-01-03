@@ -1,0 +1,27 @@
+{{- if .Values.clusterIssuer.staging.enabled -}}
+apiVersion: cert-manager.io/v1
+kind: ClusterIssuer
+metadata:
+  name: {{ include "cert-manager-webhook-duckdns.fullname" . }}-staging
+  labels:
+    app: {{ include "cert-manager-webhook-duckdns.name" . }}
+    chart: {{ include "cert-manager-webhook-duckdns.chart" . }}
+    release: {{ .Release.Name }}
+    heritage: {{ .Release.Service }}
+spec:
+  acme:
+    email: {{ .Values.clusterIssuer.email }}
+    privateKeySecretRef:
+      name: {{ include "cert-manager-webhook-duckdns.fullname" . }}-staging
+    server: https://acme-staging-v02.api.letsencrypt.org/directory
+    solvers:
+    - dns01:
+        webhook:
+          config:
+            domain: {{ .Values.duckdns.domain }}
+            apiTokenSecretRef:
+              key: token
+              name: {{ include "cert-manager-webhook-duckdns.fullname" . }}
+          groupName: {{ .Values.groupName }}
+          solverName: duckdns
+{{- end -}}

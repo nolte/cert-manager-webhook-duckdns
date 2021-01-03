@@ -1,8 +1,7 @@
-vendor
 .git/
 
-# Ignore the built binary
-cert-manager-webhook-duckdns
+# Ignore vendors
+vendor/
 
 # Ignore test binaries
 __main__/
