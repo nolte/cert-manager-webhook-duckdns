@@ -5,8 +5,17 @@
 ## TL;DR
 
 ```console
-$ helm repo add 
-$ helm install 
+$ helm repo add ebrianne.github.io https://ebrianne.github.io/helm-charts
+$ helm repo update
+$ helm install cert-manager-webhook-duckdns \
+            --namespace cert-manager \
+            --set duckdns.domain='<domain>' \
+            --set duckdns.token='<token>' \
+            --set clusterIssuer.production.enabled=true \
+            --set clusterIssuer.staging.enabled=true \
+            --set clusterIssuer.email=<email> \
+            --set logLevel=2 \
+            ebrianne.github.io/cert-manager-webhook-duckdns
 ```
 
 ## Introduction
@@ -20,10 +29,18 @@ This chart bootstraps a duckdns [cert-manager-webhook](https://cert-manager.io/d
 
 ## Installing the Chart
 
-To install the chart with the release name `my-release`:
+To install the chart with the release name `cert-manager-webhook-duckdns`:
 
 ```console
-$ helm install my-release 
+$ helm install cert-manager-webhook-duckdns \
+            --namespace cert-manager \
+            --set duckdns.domain='<domain>' \
+            --set duckdns.token='<token>' \
+            --set clusterIssuer.production.enabled=true \
+            --set clusterIssuer.staging.enabled=true \
+            --set clusterIssuer.email=<email> \
+            --set logLevel=2 \
+            ebrianne.github.io/cert-manager-webhook-duckdns
 ```
 
 The command deploys cert-manager-webhook-duckdns on the Kubernetes cluster in the default configuration. The [Parameters](#parameters) section lists the parameters that can be configured during installation.
@@ -32,10 +49,10 @@ The command deploys cert-manager-webhook-duckdns on the Kubernetes cluster in th
 
 ## Uninstalling the Chart
 
-To uninstall/delete the `my-release` deployment:
+To uninstall/delete the `cert-manager-webhook-duckdns` deployment:
 
 ```console
-$ helm delete my-release
+$ helm delete cert-manager-webhook-duckdns
 ```
 
 The command removes all the Kubernetes components associated with the chart and deletes the release.

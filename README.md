@@ -67,6 +67,18 @@ This webhook has been tested with [cert-manager] v1.0.1 and Kubernetes v0.17.x o
             --set logLevel=2 \
             ./deploy/cert-manager-webhook-duckdns
 
+    Or you can use the helm repo provided [here](https://github.com/ebrianne/helm-charts)
+
+        helm install cert-manager-webhook-duckdns \
+            --namespace cert-manager \
+            --set duckdns.domain='<domain>' \
+            --set duckdns.token='<token>' \
+            --set clusterIssuer.production.enabled=true \
+            --set clusterIssuer.staging.enabled=true \
+            --set clusterIssuer.email=<email> \
+            --set logLevel=2 \
+            ebrianne.github.io/cert-manager-webhook-duckdns
+
     Check the logs
 
             kubectl get pods -n cert-manager --watch
