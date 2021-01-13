@@ -1,18 +1,21 @@
 package duckdns
 
 import (
-	"fmt"
 	"context"
+	"fmt"
+	"net/http"
 
 	"github.com/jetstack/cert-manager/pkg/acme/webhook"
 	"github.com/jetstack/cert-manager/pkg/acme/webhook/apis/acme/v1alpha1"
 
 	"github.com/pkg/errors"
-	
+
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/client-go/kubernetes"
 	"k8s.io/client-go/rest"
 	"k8s.io/klog"
+
+	duckdnsgo "github.com/ebrianne/duckdns-go/duckdns"
 )
 
 func NewSolver() webhook.Solver {
@@ -50,8 +53,8 @@ func (s *duckDNSProviderSolver) validateConfig(cfg *Config) error {
 	return nil
 }
 
-func (s *duckDNSProviderSolver) newClientFromChallenge(ch *v1alpha1.ChallengeRequest) (*Client, error) {
-	
+func (s *duckDNSProviderSolver) newClientFromChallenge(ch *v1alpha1.ChallengeRequest) (*duckdnsgo.Client, error) {
+
 	cfg, err := loadConfig(ch.Config)
 	if err != nil {
 		return nil, err
@@ -69,10 +72,10 @@ func (s *duckDNSProviderSolver) newClientFromChallenge(ch *v1alpha1.ChallengeReq
 		return nil, fmt.Errorf("get credential error: %v", err)
 	}
 
-	client, err := newClient(cfg.Domain, *apiToken)
-	if err != nil {
-		return nil, fmt.Errorf("new dns client error: %v", err)
-	}
+	config := &duckdnsgo.Config{}
+	config.Token = *apiToken
+	config.DomainNames = []string{cfg.Domain}
+	client := duckdnsgo.NewClient(http.DefaultClient, config)
 
 	return client, nil
 }
@@ -109,10 +112,10 @@ func (s *duckDNSProviderSolver) Present(ch *v1alpha1.ChallengeRequest) error {
 		return err
 	}
 
-	domain := client.domain
+	domain := client.Config.DomainNames[0]
 	klog.Infof("Present txt record for domain %v", domain)
 
-	if err := client.addTxtRecord(domain, ch.Key); err != nil {
+	if _, err := client.UpdateRecord(context.Background(), ch.Key); err != nil {
 		klog.Errorf("Add txt record %q error: %v", ch.ResolvedFQDN, err)
 		return err
 	}
@@ -135,10 +138,10 @@ func (s *duckDNSProviderSolver) CleanUp(ch *v1alpha1.ChallengeRequest) error {
 		return err
 	}
 
-	domain := client.domain
+	domain := client.Config.DomainNames[0]
 	klog.Infof("Cleaning up txt record for domain %v", domain)
 
-	record, err := client.getTxtRecord(domain); 
+	record, err := client.GetRecord()
 	if err != nil {
 		klog.Errorf("Get text record %v error: %v", ch.ResolvedFQDN, err)
 		return err
@@ -150,7 +153,7 @@ func (s *duckDNSProviderSolver) CleanUp(ch *v1alpha1.ChallengeRequest) error {
 		return errors.New("record value does not match")
 	}
 
-	if err := client.deleteTxtRecord(domain, ch.Key); err != nil {
+	if _, err := client.ClearRecord(context.Background(), ch.Key); err != nil {
 		klog.Errorf("Delete domain record %v error: %v", ch.ResolvedFQDN, err)
 		return err
 	}
