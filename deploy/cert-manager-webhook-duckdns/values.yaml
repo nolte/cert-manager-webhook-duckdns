@@ -27,7 +27,7 @@ clusterIssuer:
     
 image:
   repository: ebrianne/cert-manager-webhook-duckdns
-  tag: latest
+  tag: v1.1
   pullPolicy: Always #IfNotPresent
 
 nameOverride: ""

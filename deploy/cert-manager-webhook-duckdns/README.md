@@ -24,7 +24,7 @@ This chart bootstraps a duckdns [cert-manager-webhook](https://cert-manager.io/d
 
 ## Prerequisites
 
-- Kubernetes 1.12+
+- Kubernetes 1.18+
 - Helm 3.0+
 
 ## Installing the Chart
@@ -73,7 +73,7 @@ The following table lists the configurable parameters of the cert-manager-webhoo
 | `clusterIssuer.staging.create`     | Create letsencrypt staging cluster issuer       | `false`                                                 |
 | `clusterIssuer.production.create`  | Create letsencrypt production cluster issuer    | `false`                                                 |
 | `image.repository`                 | Docker image repository                         | `ebrianne/cert-manager-webhook-duckdns`                 |
-| `image.tag`                        | Docker image tag                                | `latest`                                                |
+| `image.tag`                        | Docker image tag                                | `v1.1`                                                  |
 | `image.pullPolicy`                 | Docker image pull policy                        | `Always`                                                |
 | `nameOverride`                     | Name override for the chart                     | `""`                                                    |
 | `fullnameOverride`                 | Full name override for the chart                | `""`                                                    |
