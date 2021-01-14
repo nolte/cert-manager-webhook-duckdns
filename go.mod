@@ -3,7 +3,7 @@ module github.com/ebrianne/cert-manager-webhook-duckdns
 go 1.15
 
 require (
-	github.com/ebrianne/duckdns-go v0.0.0-20210113142908-7e7bed0bcfe8
+	github.com/ebrianne/duckdns-go v1.0.1
 	github.com/jetstack/cert-manager v1.1.0
 	github.com/pkg/errors v0.9.1
 	k8s.io/apiextensions-apiserver v0.19.3
