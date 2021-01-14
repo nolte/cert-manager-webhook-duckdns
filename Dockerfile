@@ -4,6 +4,7 @@ RUN apk add --no-cache git
 
 WORKDIR /workspace
 ENV GO111MODULE=on
+ENV GOPATH="/workspace/.go"
 
 COPY go.mod .
 COPY go.sum .
