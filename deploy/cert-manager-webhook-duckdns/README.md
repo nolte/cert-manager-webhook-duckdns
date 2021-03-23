@@ -11,8 +11,8 @@ $ helm install cert-manager-webhook-duckdns \
             --namespace cert-manager \
             --set duckdns.domain='<domain>' \
             --set duckdns.token='<token>' \
-            --set clusterIssuer.production.enabled=true \
-            --set clusterIssuer.staging.enabled=true \
+            --set clusterIssuer.production.create=true \
+            --set clusterIssuer.staging.create=true \
             --set clusterIssuer.email=<email> \
             --set logLevel=2 \
             ebrianne.github.io/cert-manager-webhook-duckdns
@@ -36,8 +36,8 @@ $ helm install cert-manager-webhook-duckdns \
             --namespace cert-manager \
             --set duckdns.domain='<domain>' \
             --set duckdns.token='<token>' \
-            --set clusterIssuer.production.enabled=true \
-            --set clusterIssuer.staging.enabled=true \
+            --set clusterIssuer.production.create=true \
+            --set clusterIssuer.staging.create=true \
             --set clusterIssuer.email=<email> \
             --set logLevel=2 \
             ebrianne.github.io/cert-manager-webhook-duckdns

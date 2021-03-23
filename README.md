@@ -62,8 +62,8 @@ This webhook has been tested with [cert-manager] v1.0.1 and Kubernetes v0.17.x o
             --namespace cert-manager \
             --set duckdns.domain='<domain>' \
             --set duckdns.token='<token>' \
-            --set clusterIssuer.production.enabled=true \
-            --set clusterIssuer.staging.enabled=true \
+            --set clusterIssuer.production.create=true \
+            --set clusterIssuer.staging.create=true \
             --set clusterIssuer.email=<email> \
             --set logLevel=2 \
             ./deploy/cert-manager-webhook-duckdns
@@ -74,8 +74,8 @@ This webhook has been tested with [cert-manager] v1.0.1 and Kubernetes v0.17.x o
             --namespace cert-manager \
             --set duckdns.domain='<domain>' \
             --set duckdns.token='<token>' \
-            --set clusterIssuer.production.enabled=true \
-            --set clusterIssuer.staging.enabled=true \
+            --set clusterIssuer.production.create=true \
+            --set clusterIssuer.staging.create=true \
             --set clusterIssuer.email=<email> \
             --set logLevel=2 \
             ebrianne.github.io/cert-manager-webhook-duckdns
