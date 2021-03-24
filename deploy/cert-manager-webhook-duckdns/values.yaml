@@ -8,14 +8,13 @@
 # here is recommended.
 groupName: acme.duckdns.org
 
-logLevel: 6
+logLevel: 2
 
 certManager:
   namespace: cert-manager
   serviceAccountName: cert-manager
 
 duckdns:
-  domain: ""
   token: ""
 
 clusterIssuer:

@@ -9,7 +9,6 @@ $ helm repo add ebrianne.github.io https://ebrianne.github.io/helm-charts
 $ helm repo update
 $ helm install cert-manager-webhook-duckdns \
             --namespace cert-manager \
-            --set duckdns.domain='<domain>' \
             --set duckdns.token='<token>' \
             --set clusterIssuer.production.create=true \
             --set clusterIssuer.staging.create=true \
@@ -34,7 +33,6 @@ To install the chart with the release name `cert-manager-webhook-duckdns`:
 ```console
 $ helm install cert-manager-webhook-duckdns \
             --namespace cert-manager \
-            --set duckdns.domain='<domain>' \
             --set duckdns.token='<token>' \
             --set clusterIssuer.production.create=true \
             --set clusterIssuer.staging.create=true \
@@ -64,10 +62,9 @@ The following table lists the configurable parameters of the cert-manager-webhoo
 | Parameter                          | Description                                     | Default                                                 |
 |------------------------------------|-------------------------------------------------|---------------------------------------------------------|
 | `groupName`                        | Group name for the webhook                      | `acme.duckdns.org`                                      |
-| `logLevel`                         | Logging level                                   | `6`                                                     |
+| `logLevel`                         | Logging level                                   | `2`                                                     |
 | `certManager.namespace`            | cert-manager namespace                          | `cert-manager`                                          |
 | `certManager.serviceAccountName`   | cert-manager service account name               | `cert-manager`                                          |
-| `duckdns.domain`                   | DuckDNS domain                                  | `""`                                                    |
 | `duckdns.token`                    | DuckDNS token                                   | `""`                                                    |
 | `clusterIssuer.email`              | Cluster issuer email address                    | `name@example.com`                                      |
 | `clusterIssuer.staging.create`     | Create letsencrypt staging cluster issuer       | `false`                                                 |
