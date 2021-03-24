@@ -4,12 +4,13 @@ import (
 	"os"
 	"testing"
 
-	"github.com/jetstack/cert-manager/test/acme/dns"
 	"github.com/ebrianne/cert-manager-webhook-duckdns/duckdns"
+	"github.com/jetstack/cert-manager/test/acme/dns"
 )
 
 var (
-	zone = os.Getenv("TEST_ZONE_NAME")
+	zone    = os.Getenv("TEST_ZONE_NAME")
+	dnsname = os.Getenv("DNS_NAME")
 )
 
 func TestRunsSuite(t *testing.T) {
@@ -20,6 +21,7 @@ func TestRunsSuite(t *testing.T) {
 	fixture := dns.NewFixture(duckdns.NewSolver(),
 		dns.SetBinariesPath("__main__/hack/bin"),
 		dns.SetResolvedZone(zone),
+		dns.SetDNSName(dnsname),
 		dns.SetAllowAmbientCredentials(false),
 		dns.SetManifestPath("testdata/duckdns"),
 	)

@@ -1,5 +1,4 @@
 {
-    "domain": "technolab.duckdns.org",
     "apiTokenSecretRef": {
         "Name": "duckdns-token",
         "Key": "duckdns-token"
