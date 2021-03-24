@@ -127,11 +127,11 @@ Please note that the test is not a typical unit or integration test. Instead it 
 As said above, the conformance test is run against the real DuckDNS API. Therefore you *must* have a DuckDNS account, a domain and an API token.
 
 ``` shell
-cp testdata/duckdns/api-key.yaml.sample testdata/duckdns/api-key.yaml
+cp testdata/duckdns/api-key.yml.sample testdata/duckdns/api-key.yml
 echo -n $YOUR_DUCKDNS_TOKEN | base64 | pbcopy # or xclip
-$EDITOR testdata/duckdns/api-key.yaml
+$EDITOR testdata/duckdns/api-key.yml
 ./scripts/fetch-test-binaries.sh
-TEST_ZONE_NAME=example.com. go test -v .
+TEST_ZONE_NAME=example.com. DNS_NAME=example.com go test -v .
 ```
 
 [ACME DNS-01 challenge]: https://letsencrypt.org/docs/challenge-types/#dns-01-challenge
