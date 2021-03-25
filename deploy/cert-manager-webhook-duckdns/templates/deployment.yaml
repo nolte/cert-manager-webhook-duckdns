@@ -24,12 +24,16 @@ spec:
         - name: {{ .Chart.Name }}
           image: "{{ .Values.image.repository }}:{{ .Values.image.tag }}"
           imagePullPolicy: {{ .Values.image.pullPolicy }}
+          {{- if .Values.image.pullSecret }}
+          imagePullSecrets:
+            - name: {{ .Values.image.pullSecret }}
+          {{- end }}
           args:
             - --tls-cert-file=/tls/tls.crt
             - --tls-private-key-file=/tls/tls.key
-{{- if .Values.logLevel }}
+          {{- if .Values.logLevel }}
             - --v={{ .Values.logLevel }}
-{{- end }}
+          {{- end }}
           env:
             - name: GROUP_NAME
               value: {{ .Values.groupName | quote }}
@@ -52,20 +56,20 @@ spec:
               mountPath: /tls
               readOnly: true
           resources:
-{{ toYaml .Values.resources | indent 12 }}
+      {{ toYaml .Values.resources | indent 12 }}
       volumes:
         - name: certs
           secret:
             secretName: {{ include "cert-manager-webhook-duckdns.servingCertificate" . }}
-    {{- with .Values.nodeSelector }}
+      {{- with .Values.nodeSelector }}
       nodeSelector:
-{{ toYaml . | indent 8 }}
-    {{- end }}
-    {{- with .Values.affinity }}
+      {{ toYaml . | indent 8 }}
+      {{- end }}
+      {{- with .Values.affinity }}
       affinity:
-{{ toYaml . | indent 8 }}
-    {{- end }}
-    {{- with .Values.tolerations }}
+      {{ toYaml . | indent 8 }}
+      {{- end }}
+      {{- with .Values.tolerations }}
       tolerations:
-{{ toYaml . | indent 8 }}
-    {{- end }}
+      {{ toYaml . | indent 8 }}
+      {{- end }}

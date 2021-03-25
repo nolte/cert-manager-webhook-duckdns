@@ -9,7 +9,6 @@ $ helm repo add ebrianne.github.io https://ebrianne.github.io/helm-charts
 $ helm repo update
 $ helm install cert-manager-webhook-duckdns \
             --namespace cert-manager \
-            --set duckdns.domain='<domain>' \
             --set duckdns.token='<token>' \
             --set clusterIssuer.production.create=true \
             --set clusterIssuer.staging.create=true \
@@ -34,7 +33,6 @@ To install the chart with the release name `cert-manager-webhook-duckdns`:
 ```console
 $ helm install cert-manager-webhook-duckdns \
             --namespace cert-manager \
-            --set duckdns.domain='<domain>' \
             --set duckdns.token='<token>' \
             --set clusterIssuer.production.create=true \
             --set clusterIssuer.staging.create=true \
@@ -64,17 +62,19 @@ The following table lists the configurable parameters of the cert-manager-webhoo
 | Parameter                          | Description                                     | Default                                                 |
 |------------------------------------|-------------------------------------------------|---------------------------------------------------------|
 | `groupName`                        | Group name for the webhook                      | `acme.duckdns.org`                                      |
-| `logLevel`                         | Logging level                                   | `6`                                                     |
+| `logLevel`                         | Logging level                                   | `2`                                                     |
 | `certManager.namespace`            | cert-manager namespace                          | `cert-manager`                                          |
 | `certManager.serviceAccountName`   | cert-manager service account name               | `cert-manager`                                          |
-| `duckdns.domain`                   | DuckDNS domain                                  | `""`                                                    |
 | `duckdns.token`                    | DuckDNS token                                   | `""`                                                    |
 | `clusterIssuer.email`              | Cluster issuer email address                    | `name@example.com`                                      |
 | `clusterIssuer.staging.create`     | Create letsencrypt staging cluster issuer       | `false`                                                 |
 | `clusterIssuer.production.create`  | Create letsencrypt production cluster issuer    | `false`                                                 |
 | `image.repository`                 | Docker image repository                         | `ebrianne/cert-manager-webhook-duckdns`                 |
 | `image.tag`                        | Docker image tag                                | `v1.1`                                                  |
-| `image.pullPolicy`                 | Docker image pull policy                        | `Always`                                                |
+| `image.pullPolicy`                 | Docker image pull policy                        | `IfNotPresent`                                          |
+| `image.pullSecret`                 | Docker image pull secret                        | `nil`                                                   |
+| `secret.existingSecret`            | Existing secret                                 | `false`                                                 |
+| `secret.existingSecretName`        | Existing secret name                            | `""`                                                    |
 | `nameOverride`                     | Name override for the chart                     | `""`                                                    |
 | `fullnameOverride`                 | Full name override for the chart                | `""`                                                    |
 | `service.type`                     | Service type                                    | `ClusterIP`                                             |

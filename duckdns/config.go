@@ -27,7 +27,6 @@ import (
 // be used by your provider here, you should reference a Kubernetes Secret
 // resource and fetch these credentials using a Kubernetes clientset.
 type Config struct {
-	Domain            string                   `json:"domain"`
 	APITokenSecretRef cmmeta.SecretKeySelector `json:"apiTokenSecretRef"`
 }
 

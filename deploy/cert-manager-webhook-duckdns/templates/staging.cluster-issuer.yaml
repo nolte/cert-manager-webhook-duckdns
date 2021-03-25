@@ -18,10 +18,9 @@ spec:
     - dns01:
         webhook:
           config:
-            domain: {{ .Values.duckdns.domain }}
             apiTokenSecretRef:
               key: token
-              name: {{ include "cert-manager-webhook-duckdns.fullname" . }}
+              name: {{ include "cert-manager-webhook-duckdns.secretName" . }}
           groupName: {{ .Values.groupName }}
           solverName: duckdns
 {{- end -}}

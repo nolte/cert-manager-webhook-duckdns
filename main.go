@@ -3,9 +3,9 @@ package main
 import (
 	"os"
 
-	"github.com/jetstack/cert-manager/pkg/acme/webhook/cmd"
 	"github.com/ebrianne/cert-manager-webhook-duckdns/duckdns"
-	"k8s.io/klog"
+	"github.com/jetstack/cert-manager/pkg/acme/webhook/cmd"
+	"k8s.io/klog/v2"
 )
 
 func main() {

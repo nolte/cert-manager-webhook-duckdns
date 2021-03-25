@@ -46,3 +46,7 @@ Create chart name and version as used by the chart label.
 {{- define "cert-manager-webhook-duckdns.servingCertificate" -}}
 {{ printf "%s-webhook-tls" (include "cert-manager-webhook-duckdns.fullname" .) }}
 {{- end -}}
+
+{{- define "cert-manager-webhook-duckdns.secretName" -}}
+{{- default (include "cert-manager-webhook-duckdns.fullname" .) (.Values.secret.existingSecretName) -}}
+{{- end -}}

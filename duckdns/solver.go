@@ -4,16 +4,18 @@ import (
 	"context"
 	"fmt"
 	"net/http"
+	"strings"
 
 	"github.com/jetstack/cert-manager/pkg/acme/webhook"
 	"github.com/jetstack/cert-manager/pkg/acme/webhook/apis/acme/v1alpha1"
+	"github.com/jetstack/cert-manager/pkg/issuer/acme/dns/util"
 
 	"github.com/pkg/errors"
 
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/client-go/kubernetes"
 	"k8s.io/client-go/rest"
-	"k8s.io/klog"
+	"k8s.io/klog/v2"
 
 	duckdnsgo "github.com/ebrianne/duckdns-go/duckdns"
 )
@@ -41,10 +43,6 @@ func (s *duckDNSProviderSolver) Name() string {
 }
 
 func (s *duckDNSProviderSolver) validateConfig(cfg *Config) error {
-
-	if cfg.Domain == "" {
-		return errors.New("no duckdns domain provided in DuckDNS config")
-	}
 
 	if cfg.APITokenSecretRef.LocalObjectReference.Name == "" {
 		return errors.New("no api token secret provided in DuckDNS config")
@@ -74,10 +72,31 @@ func (s *duckDNSProviderSolver) newClientFromChallenge(ch *v1alpha1.ChallengeReq
 
 	config := &duckdnsgo.Config{}
 	config.Token = *apiToken
-	config.DomainNames = []string{cfg.Domain}
+	config.DomainNames = s.getDNSName(ch)
 	client := duckdnsgo.NewClient(http.DefaultClient, config)
 
 	return client, nil
+}
+
+func (s *duckDNSProviderSolver) getDNSName(ch *v1alpha1.ChallengeRequest) []string {
+
+	out := make([]string, 0)
+	dnsFromChallenge := ch.DNSName //full dns name, is of the form '<domain>.duckdns.org' from normal hostnames, '<suffix>.<domain>.duckdns.org' and '*.<domain>.duckdns.org' for wildcards.
+	klog.Infof("DNSName from ChallengeRequest is %v", dnsFromChallenge)
+
+	duckdnszone := strings.TrimSuffix(dnsFromChallenge, "duckdns.org") //<suffix>.<domain>. or <domain>.
+	duckdnszone = util.UnFqdn(duckdnszone)                             //<suffix>.<domain> or <domain>
+	split := strings.Split(duckdnszone, ".")
+
+	if len(split) == 2 {
+		klog.Infof("Got dns domain from challenge %v", split[1])
+		out = append(out, split[1])
+		return out
+	}
+
+	klog.Infof("Got dns domain from challenge %v", duckdnszone)
+	out = append(out, duckdnszone)
+	return out
 }
 
 func (s *duckDNSProviderSolver) getApiToken(cfg *Config, namespace string) (*string, error) {
