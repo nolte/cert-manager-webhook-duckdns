@@ -20,7 +20,7 @@ spec:
           config:
             apiTokenSecretRef:
               key: token
-              name: {{ include "cert-manager-webhook-duckdns.fullname" . }}
+              name: {{ include "cert-manager-webhook-duckdns.secretName" . }}
           groupName: {{ .Values.groupName }}
           solverName: duckdns
 {{- end -}}

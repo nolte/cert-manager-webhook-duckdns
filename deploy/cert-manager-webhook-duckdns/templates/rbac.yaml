@@ -97,3 +97,44 @@ subjects:
     kind: ServiceAccount
     name: {{ include "cert-manager-webhook-duckdns.fullname" . }}
     namespace: {{ .Values.certManager.namespace | quote }}
+---
+apiVersion: rbac.authorization.k8s.io/v1
+kind: Role
+metadata:
+  name: {{ include "cert-manager-webhook-duckdns.fullname" . }}:secret-reader
+  namespace: {{ .Values.certManager.namespace | quote }}
+  labels:
+    app: {{ include "cert-manager-webhook-duckdns.name" . }}
+    chart: {{ include "cert-manager-webhook-duckdns.chart" . }}
+    release: {{ .Release.Name }}
+    heritage: {{ .Release.Service }}
+rules:
+- apiGroups: 
+    - ""
+  resources: 
+    - "secrets"
+  resourceNames: 
+    - "{{ include "cert-manager-webhook-duckdns.secretName" . }}"
+  verbs: 
+    - "get"
+    - "watch"
+---
+apiVersion: rbac.authorization.k8s.io/v1
+kind: RoleBinding
+metadata:
+  name: {{ include "cert-manager-webhook-duckdns.fullname" . }}:secret-reader
+  namespace: {{ .Values.certManager.namespace | quote }}
+  labels:
+    app: {{ include "cert-manager-webhook-duckdns.name" . }}
+    chart: {{ include "cert-manager-webhook-duckdns.chart" . }}
+    release: {{ .Release.Name }}
+    heritage: {{ .Release.Service }}
+roleRef:
+  kind: Role
+  name: {{ include "cert-manager-webhook-duckdns.fullname" . }}:secret-reader
+  apiGroup: rbac.authorization.k8s.io
+subjects:
+ - apiGroup: ""
+   kind: ServiceAccount
+   name: {{ include "cert-manager-webhook-duckdns.fullname" . }}
+   namespace: {{ .Values.certManager.namespace | quote }}

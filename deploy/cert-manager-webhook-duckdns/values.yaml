@@ -17,6 +17,10 @@ certManager:
 duckdns:
   token: ""
 
+secret:
+  existingSecret: false
+  existingSecretName: ""
+
 clusterIssuer:
   email: name@example.com
   staging:
@@ -27,7 +31,8 @@ clusterIssuer:
 image:
   repository: ebrianne/cert-manager-webhook-duckdns
   tag: v1.1
-  pullPolicy: Always #IfNotPresent
+  pullPolicy: IfNotPresent 
+  # pullSecret: ""
 
 nameOverride: ""
 fullnameOverride: ""
