@@ -20,7 +20,7 @@ Ready made images are hosted on Docker Hub ([image tags]). Use at your own risk:
 
     ebrianne/cert-manager-webhook-duckdns
 ## Compatibility
-This webhook has been tested with [cert-manager] v1.0.1 and Kubernetes v0.17.x on `amd64`. In theory it should work on other hardware platforms as well but no steps have been taken to verify this. Please drop me a note if you had success.
+This webhook has been tested with [cert-manager] v1.2.0 and Kubernetes v0.17.x on `amd64`. In theory it should work on other hardware platforms as well but no steps have been taken to verify this. Please drop me a note if you had success.
 
 ## Install with helm
 
@@ -48,7 +48,7 @@ This webhook has been tested with [cert-manager] v1.0.1 and Kubernetes v0.17.x o
     Example output:
 
             NAME                    CHART VERSION   APP VERSION     DESCRIPTION
-            jetstack/cert-manager	  v1.1.0       	  v1.1.0     	    A Helm chart for cert-manager
+            jetstack/cert-manager	  v1.2.0       	  v1.2.0     	    A Helm chart for cert-manager
 
     Check the state and ensure that all pods are running fine (watch out for any issues regarding the `cert-manager-webhook-` pod  and its volume mounts):
 

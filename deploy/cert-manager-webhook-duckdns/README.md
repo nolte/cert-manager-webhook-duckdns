@@ -70,7 +70,7 @@ The following table lists the configurable parameters of the cert-manager-webhoo
 | `clusterIssuer.staging.create`     | Create letsencrypt staging cluster issuer       | `false`                                                 |
 | `clusterIssuer.production.create`  | Create letsencrypt production cluster issuer    | `false`                                                 |
 | `image.repository`                 | Docker image repository                         | `ebrianne/cert-manager-webhook-duckdns`                 |
-| `image.tag`                        | Docker image tag                                | `v1.1`                                                  |
+| `image.tag`                        | Docker image tag                                | `v1.2.2`                                                |
 | `image.pullPolicy`                 | Docker image pull policy                        | `IfNotPresent`                                          |
 | `image.pullSecret`                 | Docker image pull secret                        | `nil`                                                   |
 | `secret.existingSecret`            | Existing secret                                 | `false`                                                 |
