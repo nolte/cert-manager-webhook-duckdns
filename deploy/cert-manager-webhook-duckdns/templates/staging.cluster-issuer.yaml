@@ -11,6 +11,7 @@ metadata:
 spec:
   acme:
     email: {{ .Values.clusterIssuer.email }}
+    preferredChain: "ISRG Root X1"
     privateKeySecretRef:
       name: {{ include "cert-manager-webhook-duckdns.fullname" . }}-staging
     server: https://acme-staging-v02.api.letsencrypt.org/directory

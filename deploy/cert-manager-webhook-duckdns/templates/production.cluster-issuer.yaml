@@ -11,6 +11,7 @@ metadata:
 spec:
   acme:
     email: {{ .Values.clusterIssuer.email }}
+    preferredChain: "ISRG Root X1"
     privateKeySecretRef:
       name: {{ include "cert-manager-webhook-duckdns.fullname" . }}-production
     server: https://acme-v02.api.letsencrypt.org/directory
