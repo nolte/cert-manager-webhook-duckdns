@@ -1,3 +1,11 @@
+
+---
+
+**This project are currently not maintained, please use the amazing frok [ebrianne/cert-manager-webhook-duckdns](https://github.com/ebrianne/cert-manager-webhook-duckdns)**
+
+---
+
+
 # ACME DuckDNS Certmanager Webhook
 
 ```yaml
