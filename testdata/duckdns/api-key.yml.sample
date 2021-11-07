@@ -1,0 +1,7 @@
+apiVersion: v1
+kind: Secret
+metadata:
+  name: duckdns-token
+type: Opaque
+data:
+  duckdns-token: <BASE64 API KEY>

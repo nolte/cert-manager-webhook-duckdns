@@ -8,14 +8,31 @@
 # here is recommended.
 groupName: acme.duckdns.org
 
+logLevel: 2
+
 certManager:
   namespace: cert-manager
   serviceAccountName: cert-manager
 
+duckdns:
+  token: ""
+
+secret:
+  existingSecret: false
+  existingSecretName: ""
+
+clusterIssuer:
+  email: name@example.com
+  staging:
+    create: false
+  production:
+    create: false
+    
 image:
-  repository: nolte/cert-manager-webhook-duckdns
-  tag: dirty
-  pullPolicy: Always #IfNotPresent
+  repository: ebrianne/cert-manager-webhook-duckdns
+  tag: v1.2.2
+  pullPolicy: IfNotPresent 
+  # pullSecret: ""
 
 nameOverride: ""
 fullnameOverride: ""

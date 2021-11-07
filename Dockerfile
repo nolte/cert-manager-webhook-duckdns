@@ -1,9 +1,10 @@
-FROM golang:1.14.2-alpine AS build_deps
+FROM golang:1.15-alpine3.12 AS build_deps
 
 RUN apk add --no-cache git
 
 WORKDIR /workspace
 ENV GO111MODULE=on
+ENV GOPATH="/workspace/.go"
 
 COPY go.mod .
 COPY go.sum .
@@ -16,7 +17,7 @@ COPY . .
 
 RUN CGO_ENABLED=0 go build -o webhook -ldflags '-w -extldflags "-static"' .
 
-FROM alpine:3.11
+FROM alpine:latest
 
 RUN apk add --no-cache ca-certificates
 
