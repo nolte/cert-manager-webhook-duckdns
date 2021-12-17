@@ -4,8 +4,9 @@ go 1.14
 
 require (
 	github.com/jetstack/cert-manager v1.0.4
+	google.golang.org/grpc/examples v0.0.0-20211216223938-51835dc0912b // indirect
 	k8s.io/apiextensions-apiserver v0.19.3
-	k8s.io/apimachinery v0.19.3
-	k8s.io/client-go v0.19.3
+	k8s.io/apimachinery v0.23.1
+	k8s.io/client-go v0.23.1
 	k8s.io/klog v1.0.0
 )
